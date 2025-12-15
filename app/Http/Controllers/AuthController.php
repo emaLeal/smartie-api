@@ -1,0 +1,155 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use Exception;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+
+class AuthController extends Controller
+{
+    public function login(Request $request): JsonResponse {
+        try {
+        // Validate the name and password
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'password' => 'required'
+        ]);
+
+        // Returns error 400 if the validator fails
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => 'Error '.$validator->errors()
+            ], 400);
+        }
+
+        // Tries to authenticate
+         $attempt = Auth::attempt($validator->getData());
+
+        // Returns error 401 if the credentials are incorrect
+        if (!$attempt) {
+            return response()->json([
+                'error' => 'Credenciales Incorrectas'
+            ], 401);
+        }
+
+        // Regenerate session to prevent fixation attacks
+        $request->session()->regenerate();
+
+        // Get authenticated user
+        $user = Auth::user();
+
+        // Returns json with the user data
+        return response()->json([
+            'user' => $user,
+        ], 200);
+
+        } catch (AuthenticationException $e) {
+            // Specific catch for authentication exceptions
+            return response()->json([
+                'error' => 'Autenticación Fallida',
+                'message' => $e->getMessage()
+            ], 401);
+        } catch (TokenMismatchException $e) {
+            return response()->json([
+                'error' => 'Session expired',
+                'message' => 'Refresca la pagina e instente de nuevo'
+            ], 419);
+        } catch (QueryException $e) {
+            // Database Error
+            Log::error('Error de base de datos ' . $e->getMessage());
+
+            return response()->json([
+                'error' => 'Error de base de datos',
+                'message' => 'Servicio temporalmente inactivo'
+            ], 503);
+        } catch (Exception $e) {
+           $this->genericError($e);
+        }
+    }
+
+    public function register(Request $request) {
+        try {
+
+            // Validate the required fields
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string',
+                'email' => 'required|email|unique:users',
+                'password' => 'required|string|min:8|confirmed'
+            ]);
+
+            // Return error 400 if the validation fails
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => 'Error de validación: ' . $validator->errors()
+                ], 400);
+            }
+
+            // Extract the validated data
+            $data = $validator->getData();
+
+            // Create the user
+            $user = new User($data);
+
+            // Save the instance
+            $user->save();
+
+            // Return message 201 if the request is successfull
+            return response()->json([
+                'message' => 'Usuario Registrado',
+                'data' => $user
+            ], 201);
+        } catch (QueryException $e) {
+            // Database Error
+            Log::error('Error de base de datos ' . $e->getMessage());
+
+            return response()->json([
+                'error' => 'Error de base de datos',
+                'message' => 'Servicio temporalmente inactivo'
+            ], 503);
+        }  catch (Exception $e) {
+           $this->genericError($e);
+        }
+    }
+
+    public function logout(Request $request) {
+        Auth::logout();
+
+        // Invalidate the cookies
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json([
+            'message' => 'Sesión Finalizada con exito'
+        ]);
+    }
+
+    private function genericError(Exception $e) {
+        // Handling Unexpected Errors
+        Log::error('Error inesperado' . $e->getMessage());
+        Log::error('Stack trace: ' . $e->getTraceAsString());
+
+        // General Error return
+        if (app()->environment('production')) {
+            return response()->json([
+                'error' => 'Error de Servidor',
+                'message' => 'Error inesperado'
+            ], 500);
+        }
+
+        // Detailed error return
+        return response()->json([
+            'error' => 'Error de servidor',
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ]);
+    }
+}
