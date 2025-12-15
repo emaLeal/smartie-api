@@ -10,11 +10,58 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    /**
+     * Authenticate a user and start a session
+     *
+     * Validate the user's credentials and, if correct,
+     * create an authentication's session. Uses Http-Only cookies
+     * for handling the session securely
+     *
+     * @api {post} /api/auth/login Authenticate user
+     * @apiName Login
+     * @apiGroup Authentication
+     *
+     * @bodyParam name string required Nombre de usuario. Example: johndoe
+     * @bodyParam password string required password Example: secret123
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "user": {
+     *     "id": 1,
+     *     "name": "johndoe",
+     *     "email": "john@example.com"
+     *   },
+     *   "message": "Login exitoso"
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "error": "Validation Error",
+     *   "errors": {
+     *     "name": ["El campo nombre es requerido."]
+     *   }
+     * }
+     * @response 401 {
+     *   "success": false,
+     *   "error": "Credenciales Incorrectas"
+     * }
+     * @response 500 {
+     *   "success": false,
+     *   "error": "Server Error",
+     *   "message": "An unexpected error occurred"
+     * }
+     *
+     * @throws \Illuminate\Validation\ValidationException
+     * @throws \Illuminate\Auth\AuthenticationException
+     */
     public function login(Request $request): JsonResponse {
         try {
         // Validate the name and password
@@ -77,7 +124,6 @@ class AuthController extends Controller
 
     public function register(Request $request) {
         try {
-
             // Validate the required fields
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string',
@@ -93,13 +139,10 @@ class AuthController extends Controller
             }
 
             // Extract the validated data
-            $data = $validator->getData();
+            $data = $validator->validated();
 
             // Create the user
-            $user = new User($data);
-
-            // Save the instance
-            $user->save();
+            $user = User::create($data);
 
             // Return message 201 if the request is successfull
             return response()->json([
