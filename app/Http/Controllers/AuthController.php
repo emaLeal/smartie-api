@@ -9,7 +9,6 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,8 +26,8 @@ class AuthController extends Controller
      * @apiName Login
      * @apiGroup Authentication
      *
-     * @bodyParam name string required Nombre de usuario. Example: johndoe
-     * @bodyParam password string required password Example: secret123
+     * @bodyParam name string required Example: johndoe
+     * @bodyParam password string required password
      *
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -42,7 +41,7 @@ class AuthController extends Controller
      *   },
      *   "message": "Login exitoso"
      * }
-     * @response 400 {
+     * @response 422: {
      *   "success": false,
      *   "error": "Validation Error",
      *   "errors": {
@@ -64,21 +63,28 @@ class AuthController extends Controller
      */
     public function login(Request $request) {
         try {
+        if (Auth::check()) {
+            $this->delete_session($request);
+        }
         // Validate the name and password
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'password' => 'required'
         ]);
 
-        // Returns error 400 if the validator fails
+        // Returns error 422 if the validator fails
         if ($validator->fails()) {
             return response()->json([
-                'error' => 'Error '.$validator->errors()
-            ], 400);
+                'error' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         // Tries to authenticate
-         $attempt = Auth::attempt($validator->validated());
+        $attempt = Auth::attempt([
+            'name' => $validator->getValue('name'),
+            'password' => $validator->getValue('password')
+        ]);
 
         // Returns error 401 if the credentials are incorrect
         if (!$attempt) {
@@ -98,12 +104,6 @@ class AuthController extends Controller
             'user' => $user,
         ], 200);
 
-        } catch (AuthenticationException $e) {
-            // Specific catch for authentication exceptions
-            return response()->json([
-                'error' => 'Autenticación Fallida',
-                'message' => $e->getMessage()
-            ], 401);
         } catch (TokenMismatchException $e) {
             return response()->json([
                 'error' => 'Session expired',
@@ -118,7 +118,7 @@ class AuthController extends Controller
                 'message' => 'Servicio temporalmente inactivo'
             ], 503);
         } catch (Exception $e) {
-           $this->genericError($e);
+           return $this->genericError($e);
         }
     }
 
@@ -158,20 +158,22 @@ class AuthController extends Controller
                 'message' => 'Servicio temporalmente inactivo'
             ], 503);
         }  catch (Exception $e) {
-           $this->genericError($e);
+            return $this->genericError($e);
         }
     }
 
     public function logout(Request $request) {
-        Auth::logout();
-
-        // Invalidate the cookies
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
+        $this->delete_session($request);
         return response()->json([
             'message' => 'Sesión Finalizada con exito'
         ]);
+    }
+
+    private function delete_session(Request $request) {
+        Auth::logout();
+        // Invalidate the cookies
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
     }
 
     private function genericError(Exception $e): JsonResponse {
@@ -193,6 +195,6 @@ class AuthController extends Controller
             'message' => $e->getMessage(),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-        ]);
+        ], 500);
     }
 }

@@ -6,7 +6,7 @@ WORKDIR /app
 COPY composer.json composer.lock ./
 
 RUN composer install \
-    --no-dev \
+#    --no-dev \
     --optimize-autoloader \
     --no-interaction \
     --no-scripts
@@ -14,7 +14,7 @@ RUN composer install \
 COPY . .
 
 # Stage 2: Runtime
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 RUN apk add --no-cache \
     bash \
@@ -35,4 +35,4 @@ USER www-data
 
 EXPOSE 8000
 
-CMD ["php-fpm"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
