@@ -6,13 +6,13 @@ use App\Models\User;
 use Exception;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class AuthController extends Controller
 {
@@ -62,11 +62,11 @@ class AuthController extends Controller
      * @throws \Illuminate\Validation\ValidationException
      * @throws \Illuminate\Auth\AuthenticationException
      */
-    public function login(Request $request): JsonResponse {
+    public function login(Request $request) {
         try {
         // Validate the name and password
         $validator = Validator::make($request->all(), [
-            'name' => 'required',
+            'name' => 'required|string',
             'password' => 'required'
         ]);
 
@@ -78,7 +78,7 @@ class AuthController extends Controller
         }
 
         // Tries to authenticate
-         $attempt = Auth::attempt($validator->getData());
+         $attempt = Auth::attempt($validator->validated());
 
         // Returns error 401 if the credentials are incorrect
         if (!$attempt) {
@@ -174,7 +174,7 @@ class AuthController extends Controller
         ]);
     }
 
-    private function genericError(Exception $e) {
+    private function genericError(Exception $e): JsonResponse {
         // Handling Unexpected Errors
         Log::error('Error inesperado' . $e->getMessage());
         Log::error('Stack trace: ' . $e->getTraceAsString());
