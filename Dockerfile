@@ -25,6 +25,16 @@ RUN apk add --no-cache \
     postgresql-dev \
 && docker-php-ext-install pdo pdo_pgsql pgsql zip mbstring gd
 
+# --- SECCIÓN NUEVA: INSTALACIÓN DE PHPREDIS ---
+# Usamos $PHPIZE_DEPS para incluir autoconf, gcc, make, etc., necesarios para PECL
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps
+# ----------------------------------------------
+
+RUN docker-php-ext-install pdo pdo_pgsql pgsql zip mbstring gd
+
 WORKDIR /app
 
 COPY --from=builder /app .

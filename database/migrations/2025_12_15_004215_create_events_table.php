@@ -15,8 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name', 50);
             $table->string('organization', 80);
-            $table->string('event_photo');
-            $table->string('organization_photo');
+            $table->string('event_photo_url')->nullable();
+            $table->string('event_photo_public_id')->nullable();
+            $table->string('organization_photo_url')->nullable();
+            $table->string('organization_photo_public_id')->nullable();
             $table->timestamps();
         });
     }

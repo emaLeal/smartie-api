@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             SubstituteBindings::class,
             StartSession::class,
         ]);
+        $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (AuthenticationException $e, Request $request) {

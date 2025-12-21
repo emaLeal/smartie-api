@@ -3,67 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Traits\ApiExceptions;
 use Exception;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
-use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class AuthController extends Controller
 {
-    /**
-     * Authenticate a user and start a session
-     *
-     * Validate the user's credentials and, if correct,
-     * create an authentication's session. Uses Http-Only cookies
-     * for handling the session securely
-     *
-     * @api {post} /api/auth/login Authenticate user
-     * @apiName Login
-     * @apiGroup Authentication
-     *
-     * @bodyParam name string required Example: johndoe
-     * @bodyParam password string required password
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
-     *
-     * @response 200 {
-     *   "success": true,
-     *   "user": {
-     *     "id": 1,
-     *     "name": "johndoe",
-     *     "email": "john@example.com"
-     *   },
-     *   "message": "Login exitoso"
-     * }
-     * @response 422: {
-     *   "success": false,
-     *   "error": "Validation Error",
-     *   "errors": {
-     *     "name": ["El campo nombre es requerido."]
-     *   }
-     * }
-     * @response 401 {
-     *   "success": false,
-     *   "error": "Credenciales Incorrectas"
-     * }
-     * @response 500 {
-     *   "success": false,
-     *   "error": "Server Error",
-     *   "message": "An unexpected error occurred"
-     * }
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     * @throws \Illuminate\Auth\AuthenticationException
-     */
+    use ApiExceptions;
+
     public function login(Request $request) {
         try {
-        if (Auth::check()) {
+            if (Auth::check()) {
             $this->delete_session($request);
         }
         // Validate the name and password
@@ -104,21 +58,8 @@ class AuthController extends Controller
             'user' => $user,
         ], 200);
 
-        } catch (TokenMismatchException $e) {
-            return response()->json([
-                'error' => 'Session expired',
-                'message' => 'Refresca la pagina e instente de nuevo'
-            ], 419);
-        } catch (QueryException $e) {
-            // Database Error
-            Log::error('Error de base de datos ' . $e->getMessage());
-
-            return response()->json([
-                'error' => 'Error de base de datos',
-                'message' => 'Servicio temporalmente inactivo'
-            ], 503);
         } catch (Exception $e) {
-           return $this->genericError($e);
+            return $this->handleException($e);
         }
     }
 
@@ -149,16 +90,8 @@ class AuthController extends Controller
                 'message' => 'Usuario Registrado',
                 'data' => $user
             ], 201);
-        } catch (QueryException $e) {
-            // Database Error
-            Log::error('Error de base de datos ' . $e->getMessage());
-
-            return response()->json([
-                'error' => 'Error de base de datos',
-                'message' => 'Servicio temporalmente inactivo'
-            ], 503);
-        }  catch (Exception $e) {
-            return $this->genericError($e);
+        } catch (Exception $e) {
+            return $this->handleException($e);
         }
     }
 
@@ -166,35 +99,23 @@ class AuthController extends Controller
         $this->delete_session($request);
         return response()->json([
             'message' => 'Sesión Finalizada con exito'
-        ]);
+        ], 200);
+    }
+
+    public function profile(Request $request) {
+        $user = $request->user();
+        return response()->json([
+            'user' => $user
+        ], 200);
     }
 
     private function delete_session(Request $request) {
-        Auth::logout();
+        // CAMBIO AQUÍ: Especificamos el guard 'web'
+        //
+        Auth::guard('web')->logout();
+
         // Invalidate the cookies
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-    }
-
-    private function genericError(Exception $e): JsonResponse {
-        // Handling Unexpected Errors
-        Log::error('Error inesperado' . $e->getMessage());
-        Log::error('Stack trace: ' . $e->getTraceAsString());
-
-        // General Error return
-        if (app()->environment('production')) {
-            return response()->json([
-                'error' => 'Error de Servidor',
-                'message' => 'Error inesperado'
-            ], 500);
-        }
-
-        // Detailed error return
-        return response()->json([
-            'error' => 'Error de servidor',
-            'message' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-        ], 500);
     }
 }
