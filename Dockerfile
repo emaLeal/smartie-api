@@ -6,7 +6,6 @@ WORKDIR /app
 COPY composer.json composer.lock ./
 
 RUN composer install \
-#    --no-dev \
     --optimize-autoloader \
     --no-interaction \
     --no-scripts
@@ -22,8 +21,7 @@ RUN apk add --no-cache \
     libpng-dev \
     libzip-dev \
     oniguruma-dev \
-    postgresql-dev \
-&& docker-php-ext-install pdo pdo_pgsql pgsql zip mbstring gd
+    postgresql-dev
 
 # --- SECCIÓN NUEVA: INSTALACIÓN DE PHPREDIS ---
 # Usamos $PHPIZE_DEPS para incluir autoconf, gcc, make, etc., necesarios para PECL

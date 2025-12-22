@@ -17,7 +17,8 @@ return new class extends Migration
             $table->string('name', 80);
             $table->boolean('is_played')->default(false);
             $table->string('price');
-            $table->string('price_photo');
+            $table->string('price_photo_url')->nullable();
+            $table->string('price_photo_public_id')->nullable();
             $table->boolean('has_questions');
             $table->foreignId('winner_id')->constrained(
                 table: 'participants',

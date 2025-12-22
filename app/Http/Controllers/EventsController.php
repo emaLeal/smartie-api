@@ -125,7 +125,7 @@ class EventsController extends Controller
             Cache::forget("event::$id");
             return response()->json([
                 'message' => 'Evento actualizado',
-                'evento' => $event
+                'evento' => new EventResource($event)
             ], 200);
         } catch (Exception $e) {
             return $this->handleException($e);
