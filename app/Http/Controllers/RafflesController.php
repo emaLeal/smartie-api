@@ -82,7 +82,56 @@ class RafflesController extends Controller
         try {
             $raffle = Raffles::findOrFail($id);
 
+            $data = $request->validate([
+                'name' => 'sometimes|string',
+                'is_played' => 'sometimes|boolean',
+                'price' => 'sometimes|string',
+                'price_photo_url' => 'sometimes|image|max:2048',
+                'has_questions' => 'sometimes|bool',
+                'winner_id' => 'nullable|integer|exists:participants,id',
+                'winner_name' => 'nullable|string',
+                'events_id' => 'sometimes|integer|exists:events,id'
+            ]);
 
+            if ($request->hasFile('price_photo_url')) {
+                if ($raffle->price_photo_public_id) {
+                    $this->cloudinary->deleteImage($raffle->price_photo_public_id);
+                }
+                $result = $this->cloudinary->uploadImage(
+                    $request->file('price_photo_url'),
+                    'raffles_prices'
+                );
+                $data['price_photo_url'] = $result['url'];
+                $data['price_photo_public_id'] = $result['public_id'];
+            }
+
+            $raffle->update($data);
+            Cache::forget('all_raffles');
+            Cache::forget("raffle::$id");
+
+            return response()->json([
+                'message' => 'Sorteo actualizado',
+                'sorteo' => new RaffleResource($raffle)
+            ], 200);
+        } catch (Exception $e) {
+            return $this->handleException($e);
+        }
+    }
+
+    public function delete($id) {
+        try {
+            $raffle = Raffles::findOrFail($id);
+
+            if ($raffle->price_photo_public_id) {
+                $this->cloudinary->deleteImage($raffle->price_photo_public_id);
+            }
+
+            $raffle->delete();
+
+            Cache::forget('all_raffles');
+            Cache::forget("raffle::$id");
+
+            return response()->noContent();
         } catch (Exception $e) {
             return $this->handleException($e);
         }
