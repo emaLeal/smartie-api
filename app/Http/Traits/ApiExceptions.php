@@ -1,6 +1,7 @@
 <?php
 
-namespace App\Traits;
+namespace App\Http\Traits;
+
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;

@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * Class AuthController
- * @package App\Http\Controllers
  * Handles the authentication aspects of the app
- * */
+ * @package App\Http\Controllers
+ **/
 class AuthController extends Controller
 {
     use ApiExceptions;

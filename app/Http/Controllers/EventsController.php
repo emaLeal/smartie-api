@@ -7,7 +7,7 @@ use Exception;
 use Illuminate\Support\Facades\Cache;
 use App\Http\Controllers\CloudinaryController;
 use App\Http\Resources\EventResource;
-use App\Traits\ApiExceptions;
+use App\Http\Traits\ApiExceptions;
 use Illuminate\Http\Request;
 
 class EventsController extends Controller
