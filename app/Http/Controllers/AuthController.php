@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Traits\ApiExceptions;
 use App\Models\User;
-use App\Traits\ApiExceptions;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

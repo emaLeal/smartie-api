@@ -3,14 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\RaffleResource;
+use App\Http\Traits\ApiExceptions;
 use App\Models\Raffles;
-use App\Traits\ApiExceptions;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
 class RafflesController extends Controller
 {
+
     use ApiExceptions;
 
     protected $cloudinary;

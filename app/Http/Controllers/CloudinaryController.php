@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Traits\ApiExceptions;
+use App\Http\Traits\ApiExceptions;
 use Cloudinary\Cloudinary;
+use Illuminate\Console\View\Components\Warn;
 use Illuminate\Http\UploadedFile;
 
 /**
@@ -14,7 +15,8 @@ use Illuminate\Http\UploadedFile;
  **/
 class CloudinaryController extends Controller
 {
-   use ApiExceptions;
+
+    use ApiExceptions;
 
     public $cloudinary;
 
