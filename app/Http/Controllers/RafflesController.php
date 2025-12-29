@@ -9,6 +9,10 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * Class RaffleController to handle the logic of the raffle model
+ * @package App\Http\Controllers
+ **/
 class RafflesController extends Controller
 {
 

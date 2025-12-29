@@ -150,34 +150,45 @@ class EventsController extends Controller
     }
 
     /**
-     *
+     * Delete an event using the id
+     * @param int $id the id of the event to look for
+     * @return \Illuminate\Http\JsonResponse in the form of an error or 204 no content
+     * @throws \Exception for unexpected errors
      **/
-    public function delete($id) {
+    public function delete(int $id): JsonResponse {
         try {
+            // Get the event instance using the id
             $event = Events::findOrFail($id);
 
+            // Array with the two photos who will be erased
             $filesToProcess = [
                 'event_photo_public_id',
                 'organization_photo_public_id'
             ];
 
             foreach($filesToProcess as $key) {
+                // Get the attribute from the array
                 $oldPublicId = $event->{$key};
 
+                // Delete the image
                 if ($oldPublicId)
                     $this->cloudinary->deleteImage($oldPublicId);
             }
 
+            // Remove the event from the db
             $event->delete();
 
+            // Reset the cache layer
             Cache::forget('all_events');
             Cache::forget("event::$id");
 
             return response()->noContent();
         } catch (Exception $e) {
+            // Handles the error
             return $this->handleException($e);
         }
     }
+
     /**
      * Private method to handle the logic to upload the
      * neccesary files
