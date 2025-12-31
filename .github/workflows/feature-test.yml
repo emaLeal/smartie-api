@@ -18,13 +18,13 @@ jobs:
         with:
           php-version: 8.4
 
-      - name: Decrypt .env file
-        run: php artisan env:decrypt --key=${{ secrets.LARAVEL_ENCRYPTION_KEY }}
-
       - name: Install dependencies
         uses: ramsey/composer-install@v3
         with:
           composer-options: --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Decrypt .env file
+        run: php artisan env:decrypt --key=${{ secrets.LARAVEL_ENCRYPTION_KEY }}
 
       - name: Make Tests
         run: php artisan test
