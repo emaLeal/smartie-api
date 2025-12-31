@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
@@ -29,9 +29,8 @@ class AuthController extends Controller
      */
     public function login(Request $request): JsonResponse {
         try {
-            if (Auth::check()) {
-            $this->delete_session($request);
-        }
+            if (Auth::check())
+                $this->delete_session($request);
         // Validate the name and password
         $data = $request->validate([
             'name' => 'required|string',
