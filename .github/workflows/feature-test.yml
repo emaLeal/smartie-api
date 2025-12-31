@@ -1,0 +1,30 @@
+name: Feature Tests
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+
+jobs:
+  test:
+    name: Run unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Php
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@v3
+        with:
+          composer-options: --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Make Tests
+        run: php artisan test
+
+
+
