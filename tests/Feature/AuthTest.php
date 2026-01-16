@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Tests\Feature;
 
@@ -86,6 +88,17 @@ class AuthTest extends TestCase
 
         $response->assertStatus(200)
                  ->assertJsonPath('user.id', $user->id);
+    }
+
+    /**
+     * Test to see if the view is protected
+     **/
+    public function test_user_cannot_view_profile_unauthenticated() {
+        $user = User::factory()->create();
+
+        $response = $this->getJson('/api/auth/me');
+
+        $response->assertStatus(401);
     }
 
 

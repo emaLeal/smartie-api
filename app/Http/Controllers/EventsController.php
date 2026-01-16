@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Events;
@@ -12,6 +14,7 @@ use App\Http\Resources\EventResource;
 use App\Http\Traits\ApiExceptions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * Class EventsController
@@ -42,7 +45,7 @@ class EventsController extends Controller
      * @return \Illuminate\Http\JsonResponse with the event data
      * @throws \Exception if an unexpected error occurs
      **/
-    public function index(): JsonResponse {
+    public function index(): AnonymousResourceCollection {
         try {
             // If the cache event 'all_events' exist, will store it, if not, will make the db query
             // and store it in the event

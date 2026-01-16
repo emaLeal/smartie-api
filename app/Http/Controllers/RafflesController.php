@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Http\Resources\RaffleResource;
@@ -24,6 +26,9 @@ class RafflesController extends Controller
         $this->cloudinary = $cloudinary;
     }
 
+    /**
+     *
+     **/
     public function index() {
         try {
             $raffles = Cache::remember('all_raffles', 3600, function() {

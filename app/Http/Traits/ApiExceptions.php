@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Traits;
 
 use Exception;
@@ -15,8 +17,7 @@ trait ApiExceptions {
 
     protected function handleException(Exception $e): JsonResponse
     {
-        // 1. Error de Validación (ej: no mandaste la foto)
-        // 1. Error de Sesión / CSRF (Común en formularios web)
+        // In case the token is missing or is expired
         if ($e instanceof TokenMismatchException) {
             return response()->json([
                 'error' => 'Sesión expirada',
@@ -24,16 +25,16 @@ trait ApiExceptions {
             ], 419);
         }
 
-        // 2. Error de Base de Datos (Postgres)
+        // Database error
         if ($e instanceof QueryException) {
-            Log::error('Error de base de datos: ' . $e->getMessage());
+            error_log('Error de base de datos: ' . $e->getMessage());
             return response()->json([
                 'error' => 'Error de base de datos',
                 'message' => 'Servicio temporalmente inactivo o error en la consulta'
             ], 503);
         }
 
-        // 3. Error de Validación (Reglas de Laravel)
+        // Validation error
         if ($e instanceof ValidationException) {
             return response()->json([
                 'error' => 'Datos inválidos',
@@ -41,7 +42,7 @@ trait ApiExceptions {
             ], 422);
         }
 
-        // 4. Recurso No Encontrado (404)
+        // Not found resource
         if ($e instanceof ModelNotFoundException || $e instanceof NotFoundHttpException) {
             return response()->json([
                 'error' => 'No encontrado',
@@ -52,11 +53,15 @@ trait ApiExceptions {
         return $this->genericError($e);
     }
 
+    /**
+     * handles a generic error in case the exception is not addresed in the other cases
+     * @param Exception $e The exception that takes place
+     * */
     private function genericError(Exception $e): JsonResponse {
 
         // Handling Unexpected Errors
-        Log::error('Error inesperado' . $e->getMessage());
-        Log::error('Stack trace: ' . $e->getTraceAsString());
+        error_log('Error inesperado' . $e->getMessage());
+        error_log('Stack trace: ' . $e->getTraceAsString());
 
         // General Error return
         if (app()->environment('production')) {
