@@ -8,8 +8,9 @@ use App\Models\Events;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use App\Http\Controllers\CloudinaryController;
-use App\Http\Requests\CreateEventRequest;
-use App\Http\Requests\UpdateEventRequest;
+use App\Http\Requests\Events\CreateEventRequest;
+use App\Http\Requests\Events\EventRequest;
+use App\Http\Requests\Events\UpdateEventRequest;
 use App\Http\Resources\EventResource;
 use App\Http\Traits\ApiExceptions;
 use Illuminate\Http\JsonResponse;
@@ -63,10 +64,10 @@ class EventsController extends Controller
     /**
      * Returns one event using the id as query filter
      * @param int $id the event's id we're looking for
-     * @return \Illuminate\Http\JsonResponse the event or the json of the error
+     * @return \Illuminate\Http\JsonResponse|EventResource the event or the json of the error
      * @throws \Exception if an unexpected error occurs
      **/
-    public function show(int $id): JsonResponse {
+    public function show(int $id): EventResource|JsonResponse {
         try {
             // Try searching the cache event with the id and if not exists
             // makes the db query and store it in the cache layer
@@ -84,12 +85,12 @@ class EventsController extends Controller
 
     /**
      * Creates an event after validating the user input
-     * @param \App\Http\Requests\EventRequest $request the request with the body to validate
+     * @param \App\Http\Requests\Events\EventRequest $request the request with the body to validate
      * @return \Illuminate\Http\JsonResponse With the created event's data or the error
      * @throws \Illuminate\Validation\ValidationException If the user's request data is incorrect
      * @throws \Exception if an unexpected error occurs
      **/
-    public function create(CreateEventRequest $request) {
+    public function create(CreateEventRequest $request): JsonResponse {
         try {
             // Validate the user request and store it in the variable,
             // if the data is invalid, returns a ValidationException
@@ -118,7 +119,7 @@ class EventsController extends Controller
     /**
      * Function to update an event, and handles the logic regarding the images
      * @param int $id The event id to look for
-     * @param \App\Http\Requests\UpdateEventRequest $request the request sent for the user
+     * @param \App\Http\Requests\Events\UpdateEventRequest $request the request sent for the user
      * @return \Illuminate\Http\JsonResponse The Json to return the updated event or the error
      * @throws \Illuminate\Validation\ValidationException The data invalidated
      * @throws \Exception if an unexpected error occurs
@@ -195,12 +196,12 @@ class EventsController extends Controller
     /**
      * Private method to handle the logic to upload the
      * neccesary files
-     * @param \Illuminate\Http\Request $request the request with the data uploaded for the user
+     * @param EventRequest $request the request with the data uploaded for the user
      * @param array $data with the validated data to overwrite
      * @param \App\Models\Events $instance In case the instance has photos, delete them
      * @return the overwriten data
      * **/
-    private function handleImageUploads(Request $request, array $data, Events $instance = null): array
+    private function handleImageUploads(EventRequest $request, array $data, Events $instance = null): array
     {
         // Set the files to process
         $filesToProcess = [

@@ -7,8 +7,6 @@ namespace Tests\Feature;
 use App\Models\Events;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 class EventTest extends TestCase
@@ -41,20 +39,33 @@ class EventTest extends TestCase
     }
 
     public function test_can_view_event_authenticated(): void {
+        $this->createInitialEvent();
+
         $user = $this->getFactoryUser();
 
-        $events = Cache::remember('all_events', 3600, function () {
-            return Events::all();
-        });
-
-        $id = $events[0]->id;
+        $id = 1;
 
         $response = $this
             ->actingAs($user)
-            ->getJson("/api/events/$id");
+            ->getJson('/api/events/'.$id);
 
         $response->assertStatus(200);
     }
+
+    public function test_error_when_event_doesnt_exist(): void {
+        $this->createInitialEvent();
+
+        $user = $this->getFactoryUser();
+
+        $id = 12;
+
+        $response = $this
+            ->actingAs($user)
+            ->getJson('/api/events/'.$id);
+
+        $response->assertStatus(404);
+    }
+
 
     private function getFactoryUser(): User {
         $user = User::factory()->create([
@@ -63,5 +74,13 @@ class EventTest extends TestCase
         ]);
 
         return $user;
+    }
+
+    private function createInitialEvent() {
+        $data = [
+            'name' => 'Event Name',
+            'organization' => 'Organization Name'
+        ];
+        Events::create($data);
     }
 }
