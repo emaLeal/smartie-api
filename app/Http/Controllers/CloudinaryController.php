@@ -6,7 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Traits\ApiExceptions;
 use Cloudinary\Cloudinary;
-use Illuminate\Console\View\Components\Warn;
 use Illuminate\Http\UploadedFile;
 
 /**

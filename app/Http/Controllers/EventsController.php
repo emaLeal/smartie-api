@@ -16,6 +16,7 @@ use App\Http\Traits\ApiExceptions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 
 /**
  * Class EventsController
@@ -46,7 +47,7 @@ class EventsController extends Controller
      * @return \Illuminate\Http\JsonResponse with the event data
      * @throws \Exception if an unexpected error occurs
      **/
-    public function index(): AnonymousResourceCollection {
+    public function index(): AnonymousResourceCollection|JsonResponse {
         try {
             // If the cache event 'all_events' exist, will store it, if not, will make the db query
             // and store it in the event
@@ -159,7 +160,7 @@ class EventsController extends Controller
      * @return \Illuminate\Http\JsonResponse in the form of an error or 204 no content
      * @throws \Exception for unexpected errors
      **/
-    public function delete(int $id): JsonResponse {
+    public function delete(int $id): JsonResponse|Response {
         try {
             // Get the event instance using the id
             $event = Events::findOrFail($id);

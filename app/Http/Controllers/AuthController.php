@@ -29,40 +29,41 @@ class AuthController extends Controller
      * @throws \Illuminate\Validation\ValidationException if the field's validation fails
      * @throws \Exception if an unexpected error occurs
      */
-    public function login(Request $request): JsonResponse {
+    public function login(Request $request): JsonResponse
+    {
         try {
             if (Auth::check())
                 $this->delete_session($request);
-        // Validate the name and password
-        $data = $request->validate([
-            'name' => 'required|string',
-            'password' => 'required'
-        ]);
 
-        // Tries to authenticate
-        $attempt = Auth::attempt([
-            'name' => $data['name'],
-            'password' => $data['password']
-        ]);
+            // Validate the name and password
+            $data = $request->validate([
+                'name' => 'required|string',
+                'password' => 'required'
+            ]);
 
-        // Returns error 401 if the credentials are incorrect
-        if (!$attempt) {
+            // Tries to authenticate
+            $attempt = Auth::attempt([
+                'name' => $data['name'],
+                'password' => $data['password']
+            ]);
+
+            // Returns error 401 if the credentials are incorrect
+            if (!$attempt) {
+                return response()->json([
+                    'error' => 'Credenciales Incorrectas'
+                ], 401);
+            }
+
+            // Regenerate session to prevent fixation attacks
+            $request->session()->regenerate();
+
+            // Get authenticated user
+            $user = Auth::user();
+
+            // Returns json with the user data
             return response()->json([
-                'error' => 'Credenciales Incorrectas'
-            ], 401);
-        }
-
-        // Regenerate session to prevent fixation attacks
-        $request->session()->regenerate();
-
-        // Get authenticated user
-        $user = Auth::user();
-
-        // Returns json with the user data
-        return response()->json([
-            'user' => $user,
-        ], 200);
-
+                'user' => $user,
+            ], 200);
         } catch (Exception $e) {
             return $this->handleException($e);
         }
@@ -78,7 +79,8 @@ class AuthController extends Controller
      * @throws \Illuminate\Validation\ValidationException if the field's validation fails
      * @throws \Exception if an unexpected error occurs
      **/
-    public function register(Request $request): JsonResponse {
+    public function register(Request $request): JsonResponse
+    {
         try {
             $data = $request->validate([
                 'name' => 'required|string',
@@ -104,7 +106,8 @@ class AuthController extends Controller
      * @param Request $request The user's session
      * @return \Illuminate\Http\JsonResponse Code 200 when the user's session ends
      **/
-    public function logout(Request $request): JsonResponse {
+    public function logout(Request $request): JsonResponse
+    {
         $this->delete_session($request);
         return response()->json([
             'message' => 'Sesión Finalizada con exito'
@@ -117,7 +120,8 @@ class AuthController extends Controller
      * @param Request $request The user with the authentication tokens
      * @return \Illuminate\Http\JsonResponse Code 200 with the user's profile data
      **/
-    public function profile(Request $request): JsonResponse {
+    public function profile(Request $request): JsonResponse
+    {
         $user = $request->user();
         return response()->json([
             'user' => $user
@@ -128,7 +132,8 @@ class AuthController extends Controller
      * Function that handle the deletion of a session
      * @param \Illuminate\Http\Request $request The user's session
      **/
-    private function delete_session(Request $request): void {
+    private function delete_session(Request $request): void
+    {
         // CAMBIO AQUÍ: Especificamos el guard 'web'
         Auth::guard('web')->logout();
         // Invalidate the cookies
